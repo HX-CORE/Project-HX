@@ -1,5 +1,6 @@
 'use client'
 
+import { useModuleLogging } from '@/utils/hooks/useModuleLogging'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import ScrollBar from '@/components/ui/ScrollBar'
@@ -17,10 +18,15 @@ const MAX_ACTIVITIES_TO_SHOW = 5
 
 type RecentActivityProps = {
     data: Activities
+    isLoading?: boolean
+    error?: string | null
 }
 
-const RecentActivity = ({ data }: RecentActivityProps) => {
+const RecentActivity = ({ data, isLoading = false, error = null }: RecentActivityProps) => {
     const userAuthority = useUserAuthority()
+    
+    // Zentrales Module-Logging
+    useModuleLogging('Kürzliche Aktivitäten', isLoading, error, 'Kontrollzentrum', false, data)
     
     // Sort by dateTime (newest first) and take only the configured number of activities
     const recentActivities = data

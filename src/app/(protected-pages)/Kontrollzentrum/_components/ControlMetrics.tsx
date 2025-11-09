@@ -1,5 +1,6 @@
 'use client'
 
+import { useModuleLogging } from '@/utils/hooks/useModuleLogging'
 import Card from '@/components/ui/Card'
 import GrowShrinkValue from '@/components/shared/GrowShrinkValue'
 import classNames from '@/utils/classNames'
@@ -21,6 +22,12 @@ interface MetricsProps {
     dataID: number[]
     data: MetricsData
     selectedPeriod: Period
+    /** Ladevorgang für die gesamte Komponente */
+    isLoading?: boolean
+    /** Fehlerstatus für die gesamte Komponente */
+    error?: string | null
+    /** Callback-Funktion um Daten neu zu laden (bei Fehlern) */
+    onRefresh?: () => void
 }
 
 const VS_PERIOD: Record<Period, string> = {
@@ -93,7 +100,11 @@ const METRIC_CONFIGS = {
 
 const CONTAINER_CLASSES = "flex flex-col 2xl:flex-col xl:flex-row gap-4"
 
-const Metrics = ({ dataID, data, selectedPeriod }: MetricsProps) => {
+const Metrics = ({ dataID, data, selectedPeriod, isLoading = false, error = null, onRefresh }: MetricsProps) => {
+
+    // Zentrales Module-Logging
+    useModuleLogging('Metrics', isLoading, error, 'Kontrollzentrum', false, data)
+    
     return (
         <div className={CONTAINER_CLASSES}>
             {dataID.map((id) => {

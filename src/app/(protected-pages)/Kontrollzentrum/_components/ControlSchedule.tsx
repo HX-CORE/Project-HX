@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useModuleLogging } from '@/utils/hooks/useModuleLogging'
 import Avatar from '@/components/ui/Avatar'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
@@ -31,6 +32,15 @@ type ScheduledEvent = {
 
 type ScheduledEventProps = ScheduledEvent
 
+type ControlScheduleProps = {
+    /** Ladevorgang für die gesamte Komponente */
+    isLoading?: boolean
+    /** Fehlerstatus für die gesamte Komponente */
+    error?: string | null
+    /** Callback-Funktion um Daten neu zu laden (bei Fehlern) */
+    onRefresh?: () => void
+}
+
 const ScheduledEvent = (props: ScheduledEventProps) => {
     const { type, label, time } = props
 
@@ -60,8 +70,11 @@ const ScheduledEvent = (props: ScheduledEventProps) => {
     )
 }
 
-const ControlSchedule = () => {
+const ControlSchedule = ({ isLoading = false, error = null, onRefresh }: ControlScheduleProps = {}) => {
     const userAuthority = useUserAuthority()
+    
+    // Module Logging - wird automatisch Success/Error loggen
+    useModuleLogging('Terminplanung', isLoading, error, 'Kontrollzentrum', false, { eventList: true })
     
     const [selectedDate, setSelectedDate] = useState<Date | null>(
         dayjs().toDate(),
