@@ -5,29 +5,30 @@ import GrowShrinkValue from '@/components/shared/GrowShrinkValue'
 import classNames from '@/utils/classNames'
 import { NumericFormat } from 'react-number-format'
 import { GiHandcuffs, GiMac10, GiChemicalTank, GiPerson } from 'react-icons/gi'
+import type { ReactNode } from 'react'
 import { MetricsData, Period } from '../types'
 
-type WidgetProps = {
+interface WidgetProps {
     title: string
     growShrink: number
-    value: string | number | React.ReactNode
+    value: string | number | ReactNode
     compareFrom: string
-    icon: React.ReactNode
+    icon: ReactNode
     iconClass: string
 }
 
-type MetricsProps = {
+interface MetricsProps {
     dataID: number[]
     data: MetricsData
     selectedPeriod: Period
 }
 
-const vsPeriod: Record<Period, string> = {
+const VS_PERIOD: Record<Period, string> = {
     thisDay: 'vs. letzter Tag',
     thisMonth: 'vs. letzter Monat',
     thisWeek: 'vs. letzte Woche',
     thisYear: 'vs. letztes Jahr',
-}
+} as const
 
 const Widget = ({
     title,
@@ -67,42 +68,36 @@ const Widget = ({
     )
 }
 
+const METRIC_CONFIGS = {
+    1: {
+        key: 'arrests' as keyof MetricsData,
+        title: 'Verhaftungen',
+        icon: <GiHandcuffs />,
+    },
+    2: {
+        key: 'seizedWeapons' as keyof MetricsData,
+        title: 'Beschlagnahmte Waffen',
+        icon: <GiMac10 />,
+    },
+    3: {
+        key: 'seizedDrugs' as keyof MetricsData,
+        title: 'Sichergestellte Drogen',
+        icon: <GiChemicalTank />,
+    },
+    4: {
+        key: 'freedHostages' as keyof MetricsData,
+        title: 'Befreite Geiseln',
+        icon: <GiPerson />,
+    },
+} as const
+
+const CONTAINER_CLASSES = "flex flex-col 2xl:flex-col xl:flex-row gap-4"
+
 const Metrics = ({ dataID, data, selectedPeriod }: MetricsProps) => {
-
-    const getMetricConfig = (id: number) => {
-        const configs = {
-            1: {
-                key: 'arrests' as keyof MetricsData,
-                title: 'Verhaftungen',
-                icon: <GiHandcuffs />,
-            },
-            2: {
-                key: 'seizedWeapons' as keyof MetricsData,
-                title: 'Beschlagnahmte Waffen',
-                icon: <GiMac10 />,
-            },
-            3: {
-                key: 'seizedDrugs' as keyof MetricsData,
-                title: 'Sichergestellte Drogen',
-                icon: <GiChemicalTank />,
-            },
-            4: {
-                key: 'freedHostages' as keyof MetricsData,
-                title: 'Befreite Geiseln',
-                icon: <GiPerson />,
-            },
-        }
-        return configs[id as keyof typeof configs]
-    }
-
-
-    
-    const containerClass = "flex flex-col 2xl:flex-col xl:flex-row gap-4"
-    
     return (
-        <div className={containerClass}>
+        <div className={CONTAINER_CLASSES}>
             {dataID.map((id) => {
-                const config = getMetricConfig(id)
+                const config = METRIC_CONFIGS[id as keyof typeof METRIC_CONFIGS]
                 if (!config) return null
                 
                 const metricData = data[config.key]
@@ -119,7 +114,7 @@ const Metrics = ({ dataID, data, selectedPeriod }: MetricsProps) => {
                             />
                         }
                         growShrink={metricData.growShrink}
-                        compareFrom={vsPeriod[selectedPeriod]}
+                        compareFrom={VS_PERIOD[selectedPeriod]}
                         icon={config.icon}
                         iconClass="dark:bg-gray-900"
                     />
