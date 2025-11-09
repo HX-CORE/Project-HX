@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, memo } from 'react'
 import { useModuleLogging } from '@/utils/hooks/useModuleLogging'
 import Avatar from '@/components/ui/Avatar'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Calendar from '@/components/ui/Calendar'
 import ScrollBar from '@/components/ui/ScrollBar'
+import Loading from '@/components/shared/Loading'
 import { eventGenerator, isToday } from '../utils/getSchedule'
 import classNames from '@/utils/classNames'
 
@@ -32,16 +33,17 @@ type ScheduledEvent = {
 
 type ScheduledEventProps = ScheduledEvent
 
-type ControlScheduleProps = {
+interface ControlScheduleProps {
     /** Ladevorgang für die gesamte Komponente */
-    isLoading?: boolean
+    readonly isLoading?: boolean
     /** Fehlerstatus für die gesamte Komponente */
-    error?: string | null
+    readonly error?: string | null
     /** Callback-Funktion um Daten neu zu laden (bei Fehlern) */
-    onRefresh?: () => void
+    readonly onRefresh?: () => void
 }
 
-const ScheduledEvent = (props: ScheduledEventProps) => {
+// Einzelner Termin-Eintrag mit Performance-Optimierung
+const ScheduledEvent = memo<ScheduledEventProps>((props) => {
     const { type, label, time } = props
 
     const event = eventTypes[type]
@@ -68,12 +70,17 @@ const ScheduledEvent = (props: ScheduledEventProps) => {
             </div>
         </div>
     )
-}
+})
 
-const ControlSchedule = ({ isLoading = false, error = null, onRefresh }: ControlScheduleProps = {}) => {
+// Hauptkomponente - zeigt Kalender und Termine für ausgewähltes Datum
+const ControlSchedule = memo<ControlScheduleProps>(({ 
+    isLoading = false, 
+    error = null, 
+    onRefresh 
+}) => {
     const userAuthority = useUserAuthority()
     
-    // Module Logging - wird automatisch Success/Error loggen
+    // Zentrales Module-Logging
     useModuleLogging('Terminplanung', isLoading, error, 'Kontrollzentrum', false, { eventList: true })
     
     const [selectedDate, setSelectedDate] = useState<Date | null>(
@@ -83,6 +90,7 @@ const ControlSchedule = ({ isLoading = false, error = null, onRefresh }: Control
         Record<string, ScheduledEvent[]>
     >({})
 
+    // Performance-optimierte Event-Liste mit useMemo
     const eventList = useMemo(() => {
         const date = selectedDate
         const previousCreatedEvent =
@@ -127,8 +135,33 @@ const ControlSchedule = ({ isLoading = false, error = null, onRefresh }: Control
         })
     }
 
+    // Falls ein Fehler aufgetreten ist, zeige Fehlermeldung mit Retry-Button
+    if (error) {
+        return (
+            <Card>
+                <div className="flex flex-col items-center justify-center p-8 text-center">
+                    <div className="text-red-500 text-sm mb-3" role="alert">
+                        Fehler beim Laden der Terminplanung: {error}
+                    </div>
+                    {onRefresh && (
+                        <Button 
+                            size="sm"
+                            onClick={onRefresh}
+                            className="bg-primary text-white hover:bg-primary/80"
+                            aria-label="Terminplanung neu laden"
+                        >
+                            Erneut versuchen
+                        </Button>
+                    )}
+                </div>
+            </Card>
+        )
+    }
+
     return (
-        <Card>
+        <Loading loading={isLoading} type="cover" asElement={Card} spinnerClass="text-primary"
+            className="min-h-[400px]"
+        >
             <div className="flex flex-col lg:flex-row 2xl:flex-col gap-4 lg:gap-6 2xl:gap-4">
                 <div className="flex items-center justify-center w-full lg:w-auto lg:min-w-[280px] 2xl:w-full">
                     <div className="w-full max-w-[280px] min-h-[327px] max-h-[327px]">
@@ -189,8 +222,8 @@ const ControlSchedule = ({ isLoading = false, error = null, onRefresh }: Control
                     <ControlScheduleCreate onCreateEvent={handleCreateEvent} />
                 </AuthorityCheck>
             </div>
-        </Card>
+        </Loading>
     )
-}
+})
 
 export default ControlSchedule
