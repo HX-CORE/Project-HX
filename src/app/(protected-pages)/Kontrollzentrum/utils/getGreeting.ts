@@ -1,3 +1,7 @@
+/**
+ * Generiert zeitbasierte Begrüßung basierend auf aktueller Uhrzeit
+ * @returns Passende Begrüßung je nach Tageszeit
+ */
 export function getGreeting(): string {
     const hour = new Date().getHours()
 
@@ -5,5 +9,7 @@ export function getGreeting(): string {
     if (hour < 11) return 'guten Morgen'
     if (hour < 18) return 'guten Tag'
     if (hour < 22) return 'guten Abend'
-    return 'Error 500'
+    
+    // Professioneller Fallback für späte Stunden
+    return 'gute Nacht und trotzdem gute Arbeit'
 }
